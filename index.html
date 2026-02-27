@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Табиғат бойынша топқа бөлу</title>
+    <style>
+        /* Қазақ салт-дәстүрі (Ұлттық) тақырыбына арналған дизайн */
+        :root {
+            --bg-grad-1: #4a0e0e; /* Қою бордо (түскиіз/сырмақ түсі) */
+            --bg-grad-2: #8b4513; /* Ағаш/қоңыр түс */
+            --surface-color: rgba(255, 248, 231, 0.95); /* Киіз үйдің іші (ақшаңқан) */
+            --primary-color: #d35400; /* Ою-өрнек қызыл-сары */
+            --primary-hover: #e67e22;
+            --secondary-color: #00bce4; /* Көк ту түсі */
+            --secondary-hover: #3498db;
+            --danger-color: #c0392b; 
+            --danger-hover: #e74c3c;
+            --text-main: #2c1a0a;
+            --text-muted: #5c3a21;
+            --border-radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2));
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Шашу эффектісі (тәттілер, бауырсақ, домбыра түседі) */
+        .rain-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .drop {
+            position: absolute;
+            animation: fall linear infinite;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0.8; }
+        }
+
+        /* Контейнерлер */
+        .container {
+            width: 95%;
+            max-width: 1100px;
+            background-color: var(--surface-color);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(211, 84, 0, 0.1);
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border: 5px solid #d35400;
+            /* Ою-өрнекті бұрыштар елесі үшін */
+            background-image: radial-gradient(#d35400 2px, transparent 2px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            background-color: var(--surface-color);
+            background-blend-mode: overlay;
+            z-index: 10;
+        }
+
+        .active-view {
+            display: flex;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Типография */
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #8b4513;
+            text-shadow: 2px 2px 0px #f1c40f;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 900;
+        }
+
+        p.tip {
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            background: rgba(241, 196, 15, 0.3);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border-left: 5px solid #f1c40f;
+        }
+
+        /* Форма элементтері */
+        .form-group {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 25px;
+            text-align: left;
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        label {
+            display: block;
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        input[type="number"], textarea {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.5rem;
+            background-color: #fffdf8;
+            border: 3px solid #d35400;
+            color: var(--text-main);
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        input[type="number"]:focus, textarea:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 15px rgba(0, 188, 228, 0.3);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        /* Асық пішінді батырмалар */
+        button {
+            padding: 20px 40px;
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #4a2511;
+            /* Сүйек/Асық түсі */
+            background: radial-gradient(circle at 30% 30%, #ffffff, #f1e2c3);
+            border: 2px solid #d4c3a3;
+            /* Асыққа ұқсас органикалық пішін */
+            border-radius: 40% 60% 55% 45% / 50% 45% 65% 55%;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 
+                8px 8px 15px rgba(0,0,0,0.3),
+                inset -5px -5px 15px rgba(200,180,150,0.8),
+                inset 5px 5px 10px rgba(255,255,255,0.9);
+            margin: 15px;
+            user-select: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        button:active {
+            transform: scale(0.95) translateY(4px);
+            box-shadow: 
+                2px 2px 5px rgba(0,0,0,0.3),
+                inset -3px -3px 10px rgba(200,180,150,0.8),
+                inset 3px 3px 5px rgba(255,255,255,0.9);
+        }
+
+        /* Түрлі-түсті "асықтар" (қосымша батырмалар) */
+        .btn-secondary {
+            background: radial-gradient(circle at 30% 30%, #a8e6cf, #00bce4);
+            color: #004d61;
+            border-color: #00bce4;
+            box-shadow: 8px 8px 15px rgba(0,0,0,0.3), inset -5px -5px 15px rgba(0,150,180,0.6), inset 5px 5px 10px rgba(255,255,255,0.8);
+        }
+
+        .btn-danger {
+            background: radial-gradient(circle at 30% 30%, #ffbaba, #c0392b);
+            color: #fff;
+            border-color: #c0392b;
+            box-shadow: 8px 8px 15px rgba(0,0,0,0.3), inset -5px -5px 15px rgba(150,20,20,0.6), inset 5px 5px 10px rgba(255,255,255,0.6);
+        }
+
+        /* Қате хабарламасы */
+        #error-msg {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: none;
+            background: #c0392b;
+            padding: 15px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 600px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(192, 57, 43, 0.4);
+            border: 2px solid #f1c40f;
+        }
+
+        /* Ойын экраны */
+        .stats-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .remaining-count {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #4a2511;
+            background: #f1c40f;
+            padding: 10px 30px;
+            border-radius: 15px;
+            border: 4px solid #d35400;
+            box-shadow: 0 6px 0 #d35400;
+        }
+
+        .group-counters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: flex-end;
+            flex: 1;
+        }
+
+        /* Санағыштар (тұмар пішіндес) */
+        .counter-badge {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            background-color: #00bce4;
+            padding: 10px 25px;
+            border-radius: 10px 30px 10px 30px; /* Тұмар/ою формасы */
+            box-shadow: 0 5px 0 #008ba8;
+            transition: all 0.3s;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            border: 2px solid #fff;
+        }
+
+        /* Орталық нәтиже аймағы (Шаңырақ формасы) */
+        .result-area {
+            flex-grow: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50vh;
+            height: 50vh;
+            max-width: 85vw;
+            max-height: 85vw;
+            margin: 0 auto 30px auto;
+            background: #fffdf8;
+            border-radius: 50%; /* Шаңырақ дөңгелегі */
+            position: relative;
+            border: 20px solid #8b4513; /* Ағаш шеңбер */
+            box-shadow: 
+                0 0 0 8px #f1c40f, /* Алтын түсті сыртқы жиек */
+                inset 0 0 40px rgba(139, 69, 19, 0.4);
+            overflow: hidden;
+        }
+
+        /* Уықтар (Шаңырақ кресттері) */
+        .result-area::before, .result-area::after {
+            content: '';
+            position: absolute;
+            width: 100%; height: 8px;
+            background: rgba(139, 69, 19, 0.15); /* Мәтін көрінуі үшін өте ашық */
+            border-radius: 4px;
+            z-index: 0;
+        }
+        .result-area::before { transform: rotate(30deg); }
+        .result-area::after { transform: rotate(-30deg); }
+        
+        /* Қосымша уықтар (DOM арқылы емес, CSS арқылы қосу) */
+        .uyk-1 { position: absolute; width: 100%; height: 8px; background: rgba(139, 69, 19, 0.15); transform: rotate(60deg); z-index: 0; }
+        .uyk-2 { position: absolute; width: 100%; height: 8px; background: rgba(139, 69, 19, 0.15); transform: rotate(-60deg); z-index: 0; }
+
+        #current-group-display {
+            font-size: clamp(2rem, 6vw, 6vh); /* Қаріп өлшемін шеңберге бейімдеу */
+            font-weight: 900;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0;
+            transform: scale(0.1) rotate(-180deg);
+            transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Айналып шығу */
+            text-align: center;
+            padding: 20px;
+            text-shadow: 3px 3px 0px #fff, 6px 6px 0px rgba(0,0,0,0.1);
+            z-index: 1; /* Уықтардың үстінде тұруы үшін */
+            line-height: 1.2;
+        }
+
+        #current-group-display.show {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+
+        .finished-msg {
+            color: #d35400 !important;
+            font-size: clamp(1.8rem, 5vw, 5vh) !important;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2rem; }
+            button { font-size: 1.6rem; padding: 15px 30px; }
+            .remaining-count { font-size: 1.6rem; }
+            .counter-badge { font-size: 1.4rem; }
+            #current-group-display { font-size: 10vw; }
+            .result-area { width: 85vw; height: 85vw; max-width: none; max-height: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Баптау экраны -->
+    <div id="setup-view" class="container active-view">
+        <h1>Экожүйе карталары</h1>
+        <p class="tip">Кеңес: Толық экран режиміне өту үшін <b>F11</b> пернесін басыңыз.</p>
+
+        <div id="error-msg"></div>
+
+        <div class="form-group">
+            <label for="student-count">Оқушылар саны:</label>
+            <input type="number" id="student-count" value="24" min="2" step="1">
+        </div>
+
+        <div class="form-group">
+            <label for="group-names">Топ атаулары (әр жолға бір атау):</label>
+            <textarea id="group-names">ОРМАН
+ТАУ
+ДАЛА
+ТЕҢІЗ</textarea>
+        </div>
+
+        <button onclick="startGame()">Бөлуге дайындау (араластыру)</button>
+    </div>
+
+    <!-- 2. Ойын экраны -->
+    <div id="game-view" class="container">
+        <div class="stats-header">
+            <div class="remaining-count">Қалды: <span id="students-left">0</span></div>
+            <div class="group-counters" id="group-counters-container">
+                <!-- Осы жерге JS арқылы топ сауыттары (counters) қосылады -->
+            </div>
+        </div>
+
+        <div class="result-area">
+            <div class="uyk-1"></div>
+            <div class="uyk-2"></div>
+            <div id="current-group-display">Бастау үшін батырманы басыңыз</div>
+        </div>
+
+        <div class="controls">
+            <button id="next-btn" onclick="drawNext()" class="btn-secondary">Келесі оқушы</button>
+            <button onclick="resetApp()" class="btn-danger">Қайта бастау</button>
+        </div>
+    </div>
+
+    <script>
+        // Ойынның негізгі айнымалылары
+        let deck = []; // Араластырылған карталар жиынтығы
+        let groupLimits = {}; // Әр топқа қанша адам қалғанын сақтайтын объект
+        let totalStudents = 0;
+        let drawnCount = 0;
+
+        // DOM элементтер
+        const setupView = document.getElementById('setup-view');
+        const gameView = document.getElementById('game-view');
+        const errorMsg = document.getElementById('error-msg');
+        const displayArea = document.getElementById('current-group-display');
+        const nextBtn = document.getElementById('next-btn');
+
+        /**
+         * Қате туралы хабарламаны көрсету (alert орнына)
+         */
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 5000);
+        }
+
+        /**
+         * Ойынды бастау: Деректерді оқу, тексеру және колоданы құру
+         */
+        function startGame() {
+            const countInput = parseInt(document.getElementById('student-count').value);
+            const groupsRaw = document.getElementById('group-names').value.split('\n');
+            
+            // Бос жолдарды алып тастау және жан-жағындағы бос орындарды кесу
+            const groups = groupsRaw.map(g => g.trim()).filter(g => g !== '');
+
+            // Валидация (Тексеру)
+            if (isNaN(countInput) || countInput < 2) {
+                showError('Қате: Оқушылар саны кем дегенде 2 болуы тиіс!');
+                return;
+            }
+            if (groups.length < 2) {
+                showError('Қате: Кем дегенде 2 топ атауын енгізіңіз!');
+                return;
+            }
+            if (countInput < groups.length) {
+                showError('Қате: Оқушылар саны топтар санынан кем болмауы керек!');
+                return;
+            }
+
+            totalStudents = countInput;
+            drawnCount = 0;
+            groupLimits = {};
+            deck = [];
+
+            // 1. Әр топқа тиесілі базалық адам санын есептеу
+            const baseCount = Math.floor(totalStudents / groups.length);
+            let remainder = totalStudents % groups.length;
+
+            // 2. Орындарды үлестіру
+            groups.forEach(group => {
+                groupLimits[group] = baseCount;
+            });
+            // Қалдықты ретімен тарату (бәрібір кейін араласады)
+            for (let i = 0; i < remainder; i++) {
+                groupLimits[groups[i]]++;
+            }
+
+            // 3. Deck (Колода) құру
+            for (const [group, count] of Object.entries(groupLimits)) {
+                for (let i = 0; i < count; i++) {
+                    deck.push(group);
+                }
+            }
+
+            // 4. Fisher-Yates алгоритмімен араластыру (Shuffle)
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]]; // Орындарды ауыстыру
+            }
+
+            // 5. Интерфейсті дайындау
+            updateCountersUI();
+            
+            // Экрандарды ауыстыру
+            setupView.classList.remove('active-view');
+            gameView.classList.add('active-view');
+            
+            // Бастапқы мәтін күйін реттеу
+            displayArea.className = '';
+            displayArea.innerHTML = 'ДАЙЫНСЫЗ<br>БА?'; // Екі жолға бөліп, ортаға түсіру
+            setTimeout(() => displayArea.classList.add('show'), 100);
+            
+            nextBtn.style.display = 'inline-block';
+            nextBtn.textContent = 'Келесі оқушы';
+        }
+
+        /**
+         * Кезекті оқушыға топ тағайындау
+         */
+        function drawNext() {
+            if (deck.length === 0) return;
+
+            // Анимацияны қайта қосу үшін класты алып тастау
+            displayArea.classList.remove('show');
+            displayArea.style.transform = 'scale(0.1) rotate(-180deg)'; // Айналу анимациясының басы
+            
+            setTimeout(() => {
+                // Колодтан бір топты алу
+                const drawnGroup = deck.pop();
+                drawnCount++;
+                
+                // Сауытты (counter) азайту
+                groupLimits[drawnGroup]--;
+                
+                // Экранға шығару
+                displayArea.textContent = drawnGroup;
+                
+                // Ұлттық тақырыпқа сай түстер (Қызыл-сары, Көк, Күлгін, Жасыл, Бордо, Алтын)
+                const natColors = ['#d35400', '#00bce4', '#8e44ad', '#27ae60', '#c0392b', '#f39c12'];
+                const groupNames = Object.keys(groupLimits);
+                const colorIndex = groupNames.indexOf(drawnGroup) % natColors.length;
+                displayArea.style.color = natColors[colorIndex];
+
+                // Көрсету (Анимациялау)
+                setTimeout(() => {
+                    displayArea.classList.add('show');
+                    displayArea.style.transform = `scale(1) rotate(0deg)`;
+                }, 50);
+                
+                // Статистиканы жаңарту
+                updateCountersUI();
+
+                // Егер бітсе
+                if (deck.length === 0) {
+                    setTimeout(() => {
+                        displayArea.classList.remove('show');
+                        setTimeout(() => {
+                            displayArea.textContent = 'Аяқталды ✅';
+                            displayArea.style.color = '#27ae60'; // Жасыл түс
+                            displayArea.classList.add('finished-msg', 'show');
+                            displayArea.style.transform = `scale(1) rotate(0deg)`;
+                            nextBtn.style.display = 'none'; // Келесі батырмасын жасыру
+                        }, 300);
+                    }, 1500); // Соңғы топты 1.5 секунд көрсетіп барып аяқталғанын жазады
+                }
+            }, 300); // CSS transition уақытына сәйкес (0.3s - 0.4s) күту
+        }
+
+        /**
+         * Жоғарғы жақтағы статистиканы (Live counter) жаңарту
+         */
+        function updateCountersUI() {
+            document.getElementById('students-left').textContent = (totalStudents - drawnCount);
+            
+            const container = document.getElementById('group-counters-container');
+            container.innerHTML = ''; // Тазалау
+
+            const natColors = ['#d35400', '#00bce4', '#8e44ad', '#27ae60', '#c0392b', '#f39c12'];
+            let colorIndex = 0;
+
+            for (const [group, count] of Object.entries(groupLimits)) {
+                const badge = document.createElement('div');
+                badge.className = 'counter-badge';
+                
+                // Түрлі-түсті фон
+                const bgColor = natColors[colorIndex % natColors.length];
+                badge.style.backgroundColor = bgColor;
+                badge.style.boxShadow = `0 5px 0 rgba(0,0,0,0.3)`;
+                colorIndex++;
+
+                // Егер орын қалмаса, түсін сұрғылт қылу үшін
+                if (count === 0) {
+                    badge.style.opacity = '0.5';
+                    badge.style.filter = 'grayscale(100%)';
+                }
+                badge.textContent = `${group}: ${count}`;
+                container.appendChild(badge);
+            }
+        }
+
+        /**
+         * Бастапқы баптаулар экранына қайту
+         */
+        function resetApp() {
+            gameView.classList.remove('active-view');
+            setupView.classList.add('active-view');
+            displayArea.className = ''; // Барлық кластарды өшіру (show, finished-msg)
+        }
+
+        // Шашу эффектісін қосу (Shashu effect)
+        function createShashu() {
+            const shashuContainer = document.createElement('div');
+            shashuContainer.className = 'rain-container';
+            const items = ['🍬', '🪕', '🦴', '☀️', '⛺', '🥟', '🦅', '🪙', '🐎']; // Ұлттық элементтер
+            for (let i = 0; i < 60; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'drop';
+                drop.textContent = items[Math.floor(Math.random() * items.length)];
+                drop.style.left = Math.random() * 100 + 'vw';
+                drop.style.fontSize = (Math.random() * 20 + 20) + 'px';
+                drop.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                drop.style.animationDelay = (Math.random() * 2) + 's';
+                shashuContainer.appendChild(drop);
+            }
+            document.body.prepend(shashuContainer); // Артқы фонға қою
+        }
+        
+        // Бет жүктелгенде шашуды бастау
+        window.onload = createShashu;
+    </script>
+</body>
+</html>
