@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="kk" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Қаратпа сөз - Топқа бөлу</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        hand: ['Caveat', 'cursive'],
+                    },
+                    colors: {
+                        philology: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            800: '#065f46',
+                            900: '#022c22',
+                        },
+                        amberGold: '#f59e0b',
+                    },
+                    animation: {
+                        'float-slow': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                        'pop-in': 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-15px) rotate(5deg)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 15px rgba(245, 158, 11, 0.4)' },
+                            '50%': { boxShadow: '0 0 30px rgba(245, 158, 11, 0.8)' },
+                        },
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.3) translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'scale(1) translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Қаратпа сөз background styling with subtle grammar texture */
+        body {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.15) 0px, transparent 50%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Speech animation container */
+        .speech-bubble-tail::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 20px 20px 0;
+            border-style: solid;
+            border-color: #ffffff transparent;
+            display: block;
+            width: 0;
+        }
+
+        .floating-punctuation {
+            position: absolute;
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.15;
+            color: #f59e0b;
+            font-family: 'Caveat', cursive;
+            animation: fallFloating linear infinite;
+        }
+
+        @keyframes fallFloating {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.25; }
+            80% { opacity: 0.25; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-100 flex flex-col justify-between min-h-screen relative">
+
+    <div id="backdrop-container" class="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+    <header class="relative z-10 w-full max-w-6xl mx-auto px-4 pt-6 pb-2 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-500/30">
+                <i class="fa-solid fa-comment-dots"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                    ҚАРАТПА СӨЗ <span class="text-amber-400 font-hand text-2xl font-bold font-serif">, !</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-400">Сөйлеу мәдениеті & Топқа бөлу әдістемесі</p>
+            </div>
+        </div>
+
+        <button onclick="toggleAudio()" id="audio-toggle-btn" title="Дыбысты қосу/өшіру" 
+            class="p-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-amber-400 border border-slate-700 transition flex items-center gap-2 text-sm">
+            <i id="audio-icon" class="fa-solid fa-volume-high"></i>
+            <span class="hidden sm:inline font-medium">Дыбыс</span>
+        </button>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="relative z-10 flex-grow flex items-center justify-center p-4">
+
+        <!-- 1. SETUP VIEW -->
+        <div id="setup-view" class="w-full max-w-4xl bg-slate-800/90 backdrop-blur-md rounded-3xl p-6 sm:p-10 border border-slate-700/80 shadow-2xl transition-all duration-300">
+            
+            <!-- Grammar Info Box -->
+            <div class="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/30 text-slate-200 text-sm sm:text-base leading-relaxed flex items-start gap-4 shadow-inner">
+                <div class="p-3 bg-emerald-500/20 text-emerald-400 rounded-xl text-xl shrink-0 mt-0.5">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-emerald-400 mb-1 flex items-center gap-2 text-base">
+                        Қаратпа сөз дегеніміз не?
+                    </h3>
+                    <p class="text-slate-300 text-xs sm:text-sm">
+                        Сөйлеушінің назарын өзіне аудару үшін айтылатын сөз немесе сөз тіркесі. Сөйлемде әрдайым 
+                        <span class="text-amber-400 font-bold">үтір (,)</span> немесе <span class="text-amber-400 font-bold">леп белгісі (!)</span> арқылы ажыратылады. Сөйлем мүшесі болмайды.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="error-msg" class="hidden mb-6 p-4 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-300 text-sm font-semibold flex items-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                <span id="error-text">Қате орын алды!</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                
+                <!-- Left Input column -->
+                <div class="space-y-5">
+                    <div>
+                        <label for="student-count" class="block text-sm font-bold text-slate-300 mb-2 flex items-center justify-between">
+                            <span><i class="fa-solid fa-users text-emerald-400 mr-2"></i>Оқушылар саны (Барлығы):</span>
+                            <span class="text-xs text-slate-400 font-normal">Кем дегенде 2</span>
+                        </label>
+                        <input type="number" id="student-count" value="24" min="2" max="100"
+                            class="w-full px-4 py-3 bg-slate-900/80 border border-slate-700 rounded-xl text-amber-400 font-bold text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition">
+                    </div>
+
+                    <!-- Preset Selector -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-300 mb-2">
+                            <i class="fa-solid fa-tags text-emerald-400 mr-2"></i>Қаратпа сөз тақырыпшалары (Дайын шаблондар):
+                        </label>
+                        <div class="grid grid-cols-1 gap-2">
+                            <button type="button" onclick="loadPreset('respect')" 
+                                class="px-3 py-2 bg-slate-700/50 hover:bg-emerald-600/30 border border-slate-600 hover:border-emerald-500 rounded-lg text-left text-xs sm:text-sm text-slate-200 transition flex items-center justify-between">
+                                <span><i class="fa-solid fa-graduation-cap text-amber-400 mr-2"></i>Құрметтеу қаратпалары</span>
+                                <span class="text-xs text-slate-400">Ұстаз, Әріптес...</span>
+                            </button>
+                            <button type="button" onclick="loadPreset('affection')" 
+                                class="px-3 py-2 bg-slate-700/50 hover:bg-emerald-600/30 border border-slate-600 hover:border-emerald-500 rounded-lg text-left text-xs sm:text-sm text-slate-200 transition flex items-center justify-between">
+                                <span><i class="fa-solid fa-heart text-rose-400 mr-2"></i>Сүйіспеншілік қаратпалар</span>
+                                <span class="text-xs text-slate-400">Айналайын, Жаным...</span>
+                            </button>
+                            <button type="button" onclick="loadPreset('kinship')" 
+                                class="px-3 py-2 bg-slate-700/50 hover:bg-emerald-600/30 border border-slate-600 hover:border-emerald-500 rounded-lg text-left text-xs sm:text-sm text-slate-200 transition flex items-center justify-between">
+                                <span><i class="fa-solid fa-people-roof text-teal-400 mr-2"></i>Туыстық & Жақындық</span>
+                                <span class="text-xs text-slate-400">Бауырым, Ағайын...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Textarea column -->
+                <div class="flex flex-col">
+                    <label for="group-names" class="block text-sm font-bold text-slate-300 mb-2 flex items-center justify-between">
+                        <span><i class="fa-solid fa-list-check text-emerald-400 mr-2"></i>Топ атаулары (Әр жолға біреу):</span>
+                        <span class="text-xs text-slate-400 font-normal">Қаратпа сөз ретінде</span>
+                    </label>
+                    <textarea id="group-names" rows="6" 
+                        class="w-full flex-grow p-4 bg-slate-900/80 border border-slate-700 rounded-xl text-emerald-300 font-semibold text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition resize-none leading-relaxed">АРДАҚТЫ ҮСТАЗ
+АЙНАЛАЙЫН
+БАУЫРЫМ
+ҚАРАҒЫМ</textarea>
+                </div>
+            </div>
+
+            <!-- Start Action Button -->
+            <div class="text-center pt-2">
+                <button onclick="startGame()" 
+                    class="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-lg rounded-2xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 active:scale-95 transition-all duration-200 uppercase tracking-wider flex items-center justify-center gap-3 mx-auto">
+                    <i class="fa-solid fa-shuffle text-xl"></i>
+                    <span>Топтарға бөлуді бастау</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. GAME VIEW -->
+        <div id="game-view" class="hidden w-full max-w-4xl flex-col items-center">
+            
+            <!-- Stats and Counters Header -->
+            <div class="w-full bg-slate-800/80 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-slate-700/80 mb-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                
+                <!-- Remaining badge -->
+                <div class="flex items-center gap-3 bg-slate-900/90 px-5 py-3 rounded-xl border border-amber-500/40 shrink-0">
+                    <i class="fa-solid fa-user-group text-amber-400 text-xl"></i>
+                    <div class="text-left">
+                        <div class="text-xs text-slate-400 uppercase font-bold tracking-wider">Қалған оқушы:</div>
+                        <div class="text-2xl font-black text-amber-400 leading-none" id="students-left">0</div>
+                    </div>
+                </div>
+
+                <!-- Group Counters Grid -->
+                <div id="group-counters-container" class="flex flex-wrap justify-center md:justify-end gap-2 sm:gap-3 w-full">
+                    <!-- Dynamic badges go here -->
+                </div>
+            </div>
+
+            <!-- CENTRAL SPEECH DISPLAY AREA -->
+            <div class="w-full flex justify-center my-4">
+                <div class="relative w-full max-w-xl">
+                    
+                    <!-- Decorative Large Quotes Background -->
+                    <div class="absolute -top-10 -left-6 text-7xl sm:text-8xl text-emerald-500/20 font-serif font-black select-none pointer-events-none">“</div>
+                    <div class="absolute -bottom-12 -right-6 text-7xl sm:text-8xl text-emerald-500/20 font-serif font-black select-none pointer-events-none">”</div>
+
+                    <!-- Speech Bubble Card -->
+                    <div class="relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-3xl p-8 sm:p-12 shadow-2xl border-4 border-amber-400/80 min-h-[260px] sm:min-h-[320px] flex flex-col items-center justify-center text-center text-slate-900 shadow-amber-500/10 transition-all">
+                        
+                        <!-- Top Grammatical Tag -->
+                        <div class="absolute -top-4 bg-emerald-700 text-amber-300 font-bold text-xs uppercase px-4 py-1.5 rounded-full shadow-md border border-amber-400/50 flex items-center gap-1.5">
+                            <i class="fa-solid fa-quote-left text-xs"></i>
+                            <span>Қаратпа сөз форматы</span>
+                            <i class="fa-solid fa-quote-right text-xs"></i>
+                        </div>
+
+                        <!-- Speech text holder -->
+                        <div id="speech-box" class="w-full flex flex-col items-center justify-center">
+                            
+                            <!-- Words with punctuation commas -->
+                            <div class="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
+                                <span id="current-group-display" class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight transition-all duration-300">
+                                    ДАЙЫНСЫЗ БА?
+                                </span>
+                                <span id="punctuation-mark" class="text-4xl sm:text-6xl font-black text-amber-600 font-serif inline-block font-hand transition-transform duration-300">
+                                    ,
+                                </span>
+                            </div>
+
+                            <!-- Context hint -->
+                            <p id="grammar-context" class="mt-4 text-xs sm:text-sm font-semibold text-slate-600 bg-slate-300/60 px-4 py-1.5 rounded-xl border border-slate-400/30">
+                                «Батырманы басып, келесі оқушының тобын анықтаңыз»
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Footer Buttons -->
+            <div class="flex flex-wrap items-center justify-center gap-4 mt-6">
+                <button id="next-btn" onclick="drawNext()" 
+                    class="px-8 py-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-lg rounded-2xl shadow-xl shadow-amber-500/20 hover:shadow-amber-500/40 active:scale-95 transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-circle-play text-xl"></i>
+                    <span>Келесі оқушы</span>
+                </button>
+
+                <button onclick="resetApp()" 
+                    class="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-base rounded-2xl border border-slate-700 active:scale-95 transition flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Қайта баптау</span>
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="relative z-10 w-full text-center py-4 text-xs text-slate-500 border-t border-slate-800/60 mt-auto">
+        <p>Қазақ тілі мен әдебиеті пәніне арналған интерактивті "Қаратпа сөз" дидактикалық құралы</p>
+    </footer>
+
+    <script>
+        // State management variables
+        let deck = [];
+        let groupLimits = {};
+        let totalStudents = 0;
+        let drawnCount = 0;
+        let audioEnabled = true;
+
+        // Sound synthesizer using Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'pop') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'finish') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.12); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.24); // G5
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                }
+            } catch (e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const icon = document.getElementById('audio-icon');
+            if (audioEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+            }
+        }
+
+        // Preset data for Kazakh Vocative Words
+        const PRESETS = {
+            respect: [
+                "АРДАҚТЫ ҮСТАЗ",
+                "ҚҰРМЕТТІ ӘРІПТЕС",
+                "СЫНЫПТАСТАР",
+                "МӘРТЕБЕЛІ ҚОНАҚ"
+            ],
+            affection: [
+                "АЙНАЛАЙЫН",
+                "ЖАШЫМ БАЛАМ",
+                "ҚАРАҒЫМ",
+                "ШЫРАҒЫМ"
+            ],
+            kinship: [
+                "БАУЫРЫМ",
+                "АҒАЙЫН",
+                "БАЛАҚАЙ",
+                "ХАЛҚЫМ"
+            ]
+        };
+
+        function loadPreset(type) {
+            playSound('click');
+            if (PRESETS[type]) {
+                document.getElementById('group-names').value = PRESETS[type].join('\n');
+            }
+        }
+
+        function showError(msg) {
+            const errBox = document.getElementById('error-msg');
+            const errText = document.getElementById('error-text');
+            errText.textContent = msg;
+            errBox.classList.remove('hidden');
+            setTimeout(() => {
+                errBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        function startGame() {
+            playSound('click');
+            const countInput = parseInt(document.getElementById('student-count').value);
+            const groupsRaw = document.getElementById('group-names').value.split('\n');
+            const groups = groupsRaw.map(g => g.trim()).filter(g => g !== '');
+
+            if (isNaN(countInput) || countInput < 2) {
+                showError('Қате: Оқушылар саны кем дегенде 2 болуы тиіс!');
+                return;
+            }
+            if (groups.length < 2) {
+                showError('Қате: Кем дегенде 2 топ атауын енгізіңіз!');
+                return;
+            }
+            if (countInput < groups.length) {
+                showError('Қате: Оқушылар саны топтар санынан кем болмауы керек!');
+                return;
+            }
+
+            totalStudents = countInput;
+            drawnCount = 0;
+            groupLimits = {};
+            deck = [];
+
+            const baseCount = Math.floor(totalStudents / groups.length);
+            let remainder = totalStudents % groups.length;
+
+            groups.forEach(g => {
+                groupLimits[g] = baseCount;
+            });
+            for (let i = 0; i < remainder; i++) {
+                groupLimits[groups[i]]++;
+            }
+
+            for (const [group, count] of Object.entries(groupLimits)) {
+                for (let i = 0; i < count; i++) {
+                    deck.push(group);
+                }
+            }
+
+            // Fisher-Yates Shuffle
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+
+            updateCountersUI();
+
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('game-view').classList.add('flex');
+
+            const display = document.getElementById('current-group-display');
+            const punct = document.getElementById('punctuation-mark');
+            const context = document.getElementById('grammar-context');
+            
+            display.textContent = "ДАЙЫНСЫЗ БА?";
+            punct.textContent = "!";
+            context.textContent = "«Төмендегі батырма арқылы бірінші оқушыны шығарыңыз»";
+
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.style.display = 'flex';
+        }
+
+        function drawNext() {
+            if (deck.length === 0) return;
+
+            playSound('pop');
+
+            const display = document.getElementById('current-group-display');
+            const punct = document.getElementById('punctuation-mark');
+            const context = document.getElementById('grammar-context');
+
+            // Quick animate out
+            display.style.opacity = '0';
+            display.style.transform = 'scale(0.8) translateY(-10px)';
+
+            setTimeout(() => {
+                const drawnGroup = deck.pop();
+                drawnCount++;
+                groupLimits[drawnGroup]--;
+
+                display.textContent = `«${drawnGroup}»`;
+                
+                // Dynamic grammar punctuation options for variety
+                const punctuationList = [',', '!', '...'];
+                punct.textContent = punctuationList[Math.floor(Math.random() * punctuationList.length)];
+                
+                context.textContent = `Қаратпа сөз сөйлемде ${punct.textContent} белгісімен бөлінеді`;
+
+                // Animate in
+                display.style.opacity = '1';
+                display.style.transform = 'scale(1) translateY(0)';
+
+                updateCountersUI();
+
+                if (deck.length === 0) {
+                    setTimeout(() => {
+                        playSound('finish');
+                        display.textContent = "ОЙЫН АЯҚТАЛДЫ ✅";
+                        punct.textContent = "!";
+                        context.textContent = "Барлық оқушылар топтарға бөлінді!";
+                        document.getElementById('next-btn').style.display = 'none';
+                    }, 1200);
+                }
+            }, 250);
+        }
+
+        function updateCountersUI() {
+            document.getElementById('students-left').textContent = (totalStudents - drawnCount);
+            const container = document.getElementById('group-counters-container');
+            container.innerHTML = '';
+
+            const badgeColors = [
+                'bg-emerald-900/80 text-emerald-300 border-emerald-500/50',
+                'bg-teal-900/80 text-teal-300 border-teal-500/50',
+                'bg-indigo-900/80 text-indigo-300 border-indigo-500/50',
+                'bg-amber-900/80 text-amber-300 border-amber-500/50',
+                'bg-rose-900/80 text-rose-300 border-rose-500/50'
+            ];
+
+            let idx = 0;
+            for (const [group, count] of Object.entries(groupLimits)) {
+                const badge = document.createElement('div');
+                const colorClass = badgeColors[idx % badgeColors.length];
+                idx++;
+
+                badge.className = `px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-bold flex items-center gap-2 transition ${colorClass}`;
+                
+                if (count === 0) {
+                    badge.classList.add('opacity-40', 'grayscale');
+                }
+
+                badge.innerHTML = `
+                    <span>${group}</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-900/80 text-amber-400 font-black">${count}</span>
+                `;
+                container.appendChild(badge);
+            }
+        }
+
+        function resetApp() {
+            playSound('click');
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('flex');
+            document.getElementById('setup-view').classList.remove('hidden');
+        }
+
+        // Animated punctuation rain background
+        function createPunctuationRain() {
+            const container = document.getElementById('backdrop-container');
+            const items = [',', '!', '“', '”', '💬', '📜', '✍️', '?', 'Айналайын', 'Балам', 'Ұстаз'];
+            
+            for (let i = 0; i < 25; i++) {
+                const item = document.createElement('div');
+                item.className = 'floating-punctuation';
+                item.textContent = items[Math.floor(Math.random() * items.length)];
+                item.style.left = Math.random() * 100 + 'vw';
+                item.style.fontSize = (Math.random() * 24 + 16) + 'px';
+                item.style.animationDuration = (Math.random() * 8 + 6) + 's';
+                item.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(item);
+            }
+        }
+
+        window.onload = function() {
+            createPunctuationRain();
+        };
+    </script>
+</body>
+</html>
